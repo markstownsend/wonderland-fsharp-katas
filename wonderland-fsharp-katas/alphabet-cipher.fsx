@@ -3,15 +3,6 @@
 type Message = string
 type Keyword = string
 
-let encode (key:Keyword) (message:Message) : Message =
-    "hmkbxebpxpmyllyrxiiqtoltfgzzv"
-
-let decode (key:Keyword) (message:Message) : Message =
-    "decodeme"
-
-let decipher (cipher:Message) (message:Message) : Keyword =
-    "decypherme"
-
 let charArrayAsString (seed:char[])  = 
     let conv = seed |> Array.map(fun f -> f.ToString())
     conv |> Array.fold(+) ""
@@ -24,11 +15,6 @@ let substitutionChart (seed:char[]) =
     let substC = seed |> Array.mapi(fun i c -> rotatedLine seed i)
     substC
 
-// next to develop
-let pickNext (filled:char[]) (filledIndex: int) (seed:char[]) (seedIndex:int) = 
-    filled.[filledIndex] <- seed.[seedIndex]
-    filled
-
 // simply cycling round the seed, so whatever the iterator it can't exceed the seed bounds
 let adjustSeedIndex current seedLength = 
     let lessThan = seedLength - current
@@ -36,7 +22,7 @@ let adjustSeedIndex current seedLength =
     | true -> current
     | false -> current % seedLength
 
-// test this next
+// pads the seed into the key array
 let rec padSeed (filled:char[]) (seed:char[]) (current:int) (max:int) = 
     match (max - current) <= 0 with
     | true -> filled
@@ -50,6 +36,29 @@ let rec padSeed (filled:char[]) (seed:char[]) (current:int) (max:int) =
 //    match lengthAdjustment <= 0 with
 //    | true -> key.Substring(0, key.Length + lengthAdjustment).ToCharArray()
 //    | false -> fillArray Array.create 'x' key 0 target 
+
+let alphabetIndex (x:char) = 
+    let enc = System.Text.ASCIIEncoding.ASCII
+    // just get this as a 0-25 index into the substitution chart
+    // make sure to commit tonight and push to github
+
+let encode (key:Keyword) (message:Message) : Message =
+    let cleanMessage = message.Replace(" ","")
+    let lenMsg = cleanMessage.Length
+    let filledKey = padSeed (Array.create lenMsg 'x') (key.ToCharArray()) 0 lenMsg
+    let cMsg = cleanMessage.ToCharArray()
+    let cipherSquare = substitutionChart ['A';'B';'C';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'N';'O';'P';'Q';'R';'S';'T';'U';'V';'W';'X';'Y';'Z']
+
+    let encrypted = cMsg 
+        |> Array.mapi2 (fun x y -> cipherSquare.[x].[y]) cMsg filledKey
+
+
+let decode (key:Keyword) (message:Message) : Message =
+    "decodeme"
+
+let decipher (cipher:Message) (message:Message) : Keyword =
+    "decypherme"
+
 
 #r @"../packages/Unquote/lib/net45/Unquote.dll"
 open Swensen.Unquote
@@ -69,16 +78,12 @@ let tests () =
 //    test <@ decipher "hcqxqqtqljmlzhwiivgbsapaiwcenmyu" "packmyboxwithfivedozenliquorjugs" = "scones" @>
 
     // verify utilities
-//    test <@ charArrayAsString [|'A';'B';'C'|] = "ABC" @>
-//    test <@ rotatedLine [|'A';'B';'C'|] 1 = [|'B';'C';'A'|]@>
-//    test <@ charArrayAsString (rotatedLine [|'A';'B';'C'|] 1) = "BCA" @>
-//    test <@ substitutionChart [|'A'|] = [|[|'A'|]|]@>
-//    test <@ substitutionChart [|'A';'B'|] = [|[|'A';'B'|];[|'B';'A'|]|]@>
-//    test <@ substitutionChart [|'A';'B';'C'|] = [|[|'A';'B';'C'|];[|'B';'C';'A'|];[|'C';'A';'B'|]|]@>
-//    test <@ adjustKey "mykey" 5 = [|'m';'y';'k';'e';'y'|] @> 
-//    test <@ adjustKey "mykey" 4 = [|'m';'y';'k';'e'|] @>
-//    test <@ adjustKey "mykey" 2 = [|'m';'y'|] @>
-//    test <@ adjustKey "mykey" 6 = [|'f';'a';'l';'s';'e'|] @> 
+    test <@ charArrayAsString [|'A';'B';'C'|] = "ABC" @>
+    test <@ rotatedLine [|'A';'B';'C'|] 1 = [|'B';'C';'A'|]@>
+    test <@ charArrayAsString (rotatedLine [|'A';'B';'C'|] 1) = "BCA" @>
+    test <@ substitutionChart [|'A'|] = [|[|'A'|]|]@>
+    test <@ substitutionChart [|'A';'B'|] = [|[|'A';'B'|];[|'B';'A'|]|]@>
+    test <@ substitutionChart [|'A';'B';'C'|] = [|[|'A';'B';'C'|];[|'B';'C';'A'|];[|'C';'A';'B'|]|]@>
     test <@ adjustSeedIndex 5 5 = 0 @>
     test <@ adjustSeedIndex 5 4 = 1 @>
     test <@ adjustSeedIndex 5 3 = 2 @>

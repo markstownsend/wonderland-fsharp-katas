@@ -46,7 +46,7 @@ the alphabet is rotated by one as each letter goes down the chart.
 Both parties need to decide on a secret keyword.  This keyword is not written down anywhere, but memorized.
 
 To encode the message, first write down the message.
-
+ 
 ```
 meetmebythetree
 ```
