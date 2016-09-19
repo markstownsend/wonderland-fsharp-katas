@@ -51,14 +51,9 @@ let encode (key:Keyword) (message:Message) : Message =
     let lenMsg = cleanMessage.Length
     let filledKey = padSeed (Array.create lenMsg 'x') (key.ToCharArray()) 0 lenMsg
     let cMsg = cleanMessage.ToCharArray()
-    let cAlphabet = [|'A';'B';'C';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'N';'O';'P';'Q';'R';'S';'T';'U';'V';'W';'X';'Y';'Z'|]
+    let cAlphabet = [|'a';'b';'c';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'N';'O';'P';'Q';'R';'S';'T';'U';'V';'W';'X';'Y';'Z'|]
     let cipherSquare = substitutionChart cAlphabet
-
-    let encoded = 
-        cMsg 
-            |> Array.map2 (fun x y -> (findMe cipherSquare x y) cMsg filledKey)
-//            |> Array.map2 (fun x y -> cipherSquare.[(alphabetIndex x cAlphabet)].[(alphabetIndex y cAlphabet)] cMsg filledKey)
-    
+    let encoded = Array.map2 (fun x y -> (findMe cipherSquare x y)) cMsg filledKey
     charArrayAsString encoded
 
 let decode (key:Keyword) (message:Message) : Message =
@@ -86,19 +81,19 @@ let tests () =
 //    test <@ decipher "hcqxqqtqljmlzhwiivgbsapaiwcenmyu" "packmyboxwithfivedozenliquorjugs" = "scones" @>
 
     // verify utilities
-    test <@ charArrayAsString [|'A';'B';'C'|] = "ABC" @>
-    test <@ rotatedLine [|'A';'B';'C'|] 1 = [|'B';'C';'A'|]@>
-    test <@ charArrayAsString (rotatedLine [|'A';'B';'C'|] 1) = "BCA" @>
-    test <@ substitutionChart [|'A'|] = [|[|'A'|]|]@>
-    test <@ substitutionChart [|'A';'B'|] = [|[|'A';'B'|];[|'B';'A'|]|]@>
-    test <@ substitutionChart [|'A';'B';'C'|] = [|[|'A';'B';'C'|];[|'B';'C';'A'|];[|'C';'A';'B'|]|]@>
+    test <@ charArrayAsString [|'a';'b';'c'|] = "abc" @>
+    test <@ rotatedLine [|'a';'b';'c'|] 1 = [|'b';'c';'a'|]@>
+    test <@ charArrayAsString (rotatedLine [|'a';'b';'c'|] 1) = "bca" @>
+    test <@ substitutionChart [|'a'|] = [|[|'a'|]|]@>
+    test <@ substitutionChart [|'a';'b'|] = [|[|'a';'b'|];[|'b';'a'|]|]@>
+    test <@ substitutionChart [|'a';'b';'c'|] = [|[|'a';'b';'c'|];[|'b';'c';'a'|];[|'c';'a';'b'|]|]@>
     test <@ adjustSeedIndex 5 5 = 0 @>
     test <@ adjustSeedIndex 5 4 = 1 @>
     test <@ adjustSeedIndex 5 3 = 2 @>
     test <@ adjustSeedIndex 3 1 = 0 @>
-    test <@ padSeed [|'x';'x';'x';'x'|] [|'B'|] 0 4 = [|'B';'B';'B';'B'|] @>
-    test <@ padSeed [|'x';'x';'x';'x'|] [|'A';'B';'C';'D'|] 0 4 = [|'A';'B';'C';'D'|] @>
-    test <@ padSeed [|'x';'x'|] [|'A';'B';'C';'D'|] 0 2 = [|'A';'B';|] @>
+    test <@ padSeed [|'x';'x';'x';'x'|] [|'b'|] 0 4 = [|'b';'b';'b';'b'|] @>
+    test <@ padSeed [|'x';'x';'x';'x'|] [|'a';'b';'c';'d'|] 0 4 = [|'a';'b';'c';'d'|] @>
+    test <@ padSeed [|'x';'x'|] [|'a';'b';'c';'d'|] 0 2 = [|'a';'b';|] @>
 
 
 // run the tests
