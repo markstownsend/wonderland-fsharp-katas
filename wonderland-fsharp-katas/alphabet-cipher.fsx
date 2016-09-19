@@ -3,6 +3,8 @@
 type Message = string
 type Keyword = string
 
+let cAlphabet = [|'a';'b';'c';'d';'e';'f';'g';'h';'i';'j';'k';'l';'m';'n';'o';'p';'q';'r';'s';'t';'u';'v';'w';'x';'y';'z'|]
+    
 let charArrayAsString (seed:char[])  = 
     let conv = seed |> Array.map(fun f -> f.ToString())
     conv |> Array.fold(+) ""
@@ -50,7 +52,6 @@ let encode (key:Keyword) (message:Message) : Message =
     let lenMsg = message.Length
     let filledKey = padSeed (Array.create lenMsg 'x') (key.ToCharArray()) 0 lenMsg
     let cMsg = message.ToCharArray()
-    let cAlphabet = [|'a';'b';'c';'d';'e';'f';'g';'h';'i';'j';'k';'l';'m';'n';'o';'p';'q';'r';'s';'t';'u';'v';'w';'x';'y';'z'|]
     let cipherSquare = substitutionChart cAlphabet
     let encoded = Array.map2 (fun x y -> (findMe cipherSquare x y)) filledKey cMsg
     charArrayAsString encoded
@@ -93,7 +94,13 @@ let tests () =
     test <@ padSeed [|'x';'x';'x';'x'|] [|'b'|] 0 4 = [|'b';'b';'b';'b'|] @>
     test <@ padSeed [|'x';'x';'x';'x'|] [|'a';'b';'c';'d'|] 0 4 = [|'a';'b';'c';'d'|] @>
     test <@ padSeed [|'x';'x'|] [|'a';'b';'c';'d'|] 0 2 = [|'a';'b';|] @>
-
+    test <@ alphabetIndex 'a' cAlphabet = 0 @>
+    test <@ alphabetIndex 'n' cAlphabet = 13 @>
+    test <@ (substitutionChart cAlphabet).[0].[0] = 'a'@>
+    test <@ (substitutionChart cAlphabet).[0].[12] = 'm'@>
+    test <@ (substitutionChart cAlphabet).[3].[0] = 'd'@>
+    test <@ (substitutionChart cAlphabet).[3].[4] = 'h'@>
+    test <@ charArrayAsString (padSeed (Array.create 20 'c') [|'v';'i';'g';'i';'l';'a';'n';'c';'e'|] 0 20) = "vigilancevigilancevi" @>
 
 // run the tests
 tests ()
