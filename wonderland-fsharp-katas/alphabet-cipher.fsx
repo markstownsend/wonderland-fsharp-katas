@@ -37,21 +37,29 @@ let rec padSeed (filled:char[]) (seed:char[]) (current:int) (max:int) =
 //    | true -> key.Substring(0, key.Length + lengthAdjustment).ToCharArray()
 //    | false -> fillArray Array.create 'x' key 0 target 
 
-let alphabetIndex (x:char) = 
-    let enc = System.Text.ASCIIEncoding.ASCII
-    // just get this as a 0-25 index into the substitution chart
-    // make sure to commit tonight and push to github
+let alphabetIndex (findChar:char) (findIn:char[]) = 
+    findIn |> Array.findIndex (fun x -> x = findChar)
+
+let findMe (substitutionSquare:char[][]) (x:char) (y:char) = 
+    let topLine = substitutionSquare.[1]
+    let iX = alphabetIndex x topLine
+    let iY = alphabetIndex y topLine
+    substitutionSquare.[iX].[iY]
 
 let encode (key:Keyword) (message:Message) : Message =
-    let cleanMessage = message.Replace(" ","")
+    let cleanMessage = message.Replace(" ","").ToUpper()
     let lenMsg = cleanMessage.Length
     let filledKey = padSeed (Array.create lenMsg 'x') (key.ToCharArray()) 0 lenMsg
     let cMsg = cleanMessage.ToCharArray()
-    let cipherSquare = substitutionChart ['A';'B';'C';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'N';'O';'P';'Q';'R';'S';'T';'U';'V';'W';'X';'Y';'Z']
+    let cAlphabet = [|'A';'B';'C';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'N';'O';'P';'Q';'R';'S';'T';'U';'V';'W';'X';'Y';'Z'|]
+    let cipherSquare = substitutionChart cAlphabet
 
-    let encrypted = cMsg 
-        |> Array.mapi2 (fun x y -> cipherSquare.[x].[y]) cMsg filledKey
-
+    let encoded = 
+        cMsg 
+            |> Array.map2 (fun x y -> (findMe cipherSquare x y) cMsg filledKey)
+//            |> Array.map2 (fun x y -> cipherSquare.[(alphabetIndex x cAlphabet)].[(alphabetIndex y cAlphabet)] cMsg filledKey)
+    
+    charArrayAsString encoded
 
 let decode (key:Keyword) (message:Message) : Message =
     "decodeme"
