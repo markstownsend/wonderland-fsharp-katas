@@ -43,7 +43,7 @@ let alphabetIndex (findChar:char) (findIn:char[]) =
     findIn |> Array.findIndex (fun x -> x = findChar)
 
 let findMe (substitutionSquare:char[][]) (x:char) (y:char) = 
-    let topLine = substitutionSquare.[1]
+    let topLine = substitutionSquare.[0]
     let iX = alphabetIndex x topLine
     let iY = alphabetIndex y topLine
     substitutionSquare.[iX].[iY]
@@ -70,7 +70,7 @@ let tests () =
 
 //    // verify encoding
     test <@ encode "vigilance" "meetmeontuesdayeveningatseven" = "hmkbxebpxpmyllyrxiiqtoltfgzzv" @>
-//    test <@ encode "scones" "meetmebythetree" = "egsgqwtahuiljgs" @>
+    test <@ encode "scones" "meetmebythetree" = "egsgqwtahuiljgs" @>
 //
 //    // verify decoding
 //    test <@ decode "vigilance" "hmkbxebpxpmyllyrxiiqtoltfgzzv" = "meetmeontuesdayeveningatseven" @>
@@ -100,6 +100,8 @@ let tests () =
     test <@ (substitutionChart cAlphabet).[0].[12] = 'm'@>
     test <@ (substitutionChart cAlphabet).[3].[0] = 'd'@>
     test <@ (substitutionChart cAlphabet).[3].[4] = 'h'@>
+    test <@ (substitutionChart cAlphabet).[(alphabetIndex 'v' cAlphabet)].[(alphabetIndex 'm' cAlphabet)] = 'h'@>
+    test <@ (substitutionChart cAlphabet).[(alphabetIndex 'm' cAlphabet)].[(alphabetIndex 'v' cAlphabet)] = 'h'@>
     test <@ charArrayAsString (padSeed (Array.create 20 'c') [|'v';'i';'g';'i';'l';'a';'n';'c';'e'|] 0 20) = "vigilancevigilancevi" @>
 
 // run the tests
