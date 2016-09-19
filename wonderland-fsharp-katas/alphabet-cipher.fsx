@@ -47,13 +47,12 @@ let findMe (substitutionSquare:char[][]) (x:char) (y:char) =
     substitutionSquare.[iX].[iY]
 
 let encode (key:Keyword) (message:Message) : Message =
-    let cleanMessage = message.Replace(" ","").ToUpper()
-    let lenMsg = cleanMessage.Length
+    let lenMsg = message.Length
     let filledKey = padSeed (Array.create lenMsg 'x') (key.ToCharArray()) 0 lenMsg
-    let cMsg = cleanMessage.ToCharArray()
-    let cAlphabet = [|'a';'b';'c';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'N';'O';'P';'Q';'R';'S';'T';'U';'V';'W';'X';'Y';'Z'|]
+    let cMsg = message.ToCharArray()
+    let cAlphabet = [|'a';'b';'c';'d';'e';'f';'g';'h';'i';'j';'k';'l';'m';'n';'o';'p';'q';'r';'s';'t';'u';'v';'w';'x';'y';'z'|]
     let cipherSquare = substitutionChart cAlphabet
-    let encoded = Array.map2 (fun x y -> (findMe cipherSquare x y)) cMsg filledKey
+    let encoded = Array.map2 (fun x y -> (findMe cipherSquare x y)) filledKey cMsg
     charArrayAsString encoded
 
 let decode (key:Keyword) (message:Message) : Message =
@@ -69,7 +68,7 @@ open Swensen.Unquote
 let tests () =
 
 //    // verify encoding
-//    test <@ encode "vigilance" "meetmeontuesdayeveningatseven" = "hmkbxebpxpmyllyrxiiqtoltfgzzv" @>
+    test <@ encode "vigilance" "meetmeontuesdayeveningatseven" = "hmkbxebpxpmyllyrxiiqtoltfgzzv" @>
 //    test <@ encode "scones" "meetmebythetree" = "egsgqwtahuiljgs" @>
 //
 //    // verify decoding
