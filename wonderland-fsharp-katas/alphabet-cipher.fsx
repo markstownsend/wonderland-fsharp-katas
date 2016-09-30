@@ -52,10 +52,10 @@ let findMe (substitutionSquare:char[][]) (x:char) (y:char) =
 // that row to find the cipher character, then index that into the first row
 // to get the clear text char
 let findMeBack (substitutionSquare:char[][]) (x:char) (y:char) = 
-    let firstCol = substitutionSquare |> Array
+    let firstCol = substitutionSquare  |> Array.map(fun a -> a.[0])
     let iX = alphabetIndex x firstCol
-    let iY = 0
-    substitutionSquare.[iX].[iY]
+    let iY = alphabetIndex y substitutionSquare.[iX]
+    substitutionSquare.[0].[iY]
 
 // encodes
 let encode (key:Keyword) (message:Message) : Message =
@@ -66,13 +66,13 @@ let encode (key:Keyword) (message:Message) : Message =
     let encoded = Array.map2 (fun x y -> (findMe cipherSquare x y)) filledKey cMsg
     charArrayAsString encoded
 
-// decodes - not working, develop this next
+// decodes
 let decode (key:Keyword) (message:Message) : Message =
     let lenMsg = message.Length
     let filledKey = padSeed (Array.create lenMsg 'x') (key.ToCharArray()) 0 lenMsg
     let cMsg = message.ToCharArray()
     let cipherSquare = substitutionChart cAlphabet
-    let decoded = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg filledKey
+    let decoded = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) filledKey cMsg
     charArrayAsString decoded
 
 
@@ -92,7 +92,7 @@ let tests () =
 //
 //    // verify decoding
     test <@ decode "vigilance" "hmkbxebpxpmyllyrxiiqtoltfgzzv" = "meetmeontuesdayeveningatseven" @>
-//    test <@ decode "scones" "egsgqwtahuiljgs" = "meetmebythetree" @>
+    test <@ decode "scones" "egsgqwtahuiljgs" = "meetmebythetree" @>
 //
 //    // verify decyphering
 //    test <@ decipher "opkyfipmfmwcvqoklyhxywgeecpvhelzg" "thequickbrownfoxjumpsoveralazydog" = "vigilance" @>
