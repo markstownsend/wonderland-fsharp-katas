@@ -48,6 +48,15 @@ let findMe (substitutionSquare:char[][]) (x:char) (y:char) =
     let iY = alphabetIndex y topLine
     substitutionSquare.[iX].[iY]
 
+// get the first column and look up the the keyword character, then go along 
+// that row to find the cipher character, then index that into the first row
+// to get the clear text char
+let findMeBack (substitutionSquare:char[][]) (x:char) (y:char) = 
+    let firstCol = substitutionSquare |> Array
+    let iX = alphabetIndex x firstCol
+    let iY = 0
+    substitutionSquare.[iX].[iY]
+
 // encodes
 let encode (key:Keyword) (message:Message) : Message =
     let lenMsg = message.Length
@@ -63,8 +72,8 @@ let decode (key:Keyword) (message:Message) : Message =
     let filledKey = padSeed (Array.create lenMsg 'x') (key.ToCharArray()) 0 lenMsg
     let cMsg = message.ToCharArray()
     let cipherSquare = substitutionChart cAlphabet
-    let encoded = Array.map2 (fun x y -> (findMe cipherSquare y x)) filledKey cMsg
-    charArrayAsString encoded
+    let decoded = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg filledKey
+    charArrayAsString decoded
 
 
 // what is difference between decode and decipher
@@ -115,5 +124,3 @@ let tests () =
 
 // run the tests
 tests ()
-
-
