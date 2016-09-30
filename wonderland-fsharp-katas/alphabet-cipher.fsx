@@ -76,10 +76,22 @@ let decode (key:Keyword) (message:Message) : Message =
     charArrayAsString decoded
 
 
-// what is difference between decode and decipher
+// what is difference between decipher gets the keyword out of the message and the cipher
+// arrive back at the keyword and find the repeating sequence, the first repeat is the keyword
+// presuming the message is longer than the keyword
+// take the plain text letter and find it in the first column
+// go along that column until you find the cipher text letter
+// the letter in the first row of those co-ordinates is the letter in the keyword
 let decipher (cipher:Message) (message:Message) : Keyword =
-    "decypherme"
+    let cipherSquare = substitutionChart cAlphabet
+    let cMsg = message.ToCharArray()
+    let cCpr = cipher.ToCharArray()
+    let bigKey = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg cCpr
+    // how do I find a repeating sequence ie scones in the sconessconessc
+    // it's the longest repeat
 
+let repeated (containsRepeats:char[]) = 
+    
 
 #r @"../packages/Unquote/lib/net45/Unquote.dll"
 open Swensen.Unquote
