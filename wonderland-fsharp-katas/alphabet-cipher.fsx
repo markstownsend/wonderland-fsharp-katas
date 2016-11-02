@@ -102,12 +102,20 @@ let decode (key:Keyword) (message:Message) : Message =
 //// go along that column until you find the cipher text letter
 //// the letter in the first row of those co-ordinates is the letter in the keyword
 let decipher (cipher:Message) (message:Message) : Keyword =
+    
+    let comparer (elem1:char) (elem2:char) = 
+        if elem1 > elem2 then 1
+        elif elem1 < elem2 then -1
+        else 0
+
     let cipherSquare = substitutionChart cAlphabet
     let cMsg = message.ToCharArray()
     let cCpr = cipher.ToCharArray() 
     let bigKey = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg cCpr
-    let permutations = Array2D.create bigKey.Length bigKey.Length 'x'
-    permuteArray bigKey permutations 0
+    let permutations = permuteArray bigKey (Array2D.create bigKey.Length bigKey.Length 'x') 0
+    let matching = [| for a in 0 .. permutations.Length - 1 do yield (Array.compareWith comparer bigKey permutations.[a, *]), permutations.[a, *] |]
+    let matched = matching |> Array.where(fun x -> fst x = 0) |> Array.toList
+    charArrayAsString (snd matched.Head)
 
     // how do I find a repeating sequence ie scones in the sconessconessc
     // it's the longest repeat
@@ -117,7 +125,30 @@ let decipher (cipher:Message) (message:Message) : Keyword =
 open Swensen.Unquote
 
 let tests () =
+    
+    let perTestArr = 
+        let a = Array2D.create 4 4 'x'
+        a.[0,0] <- 'a'
+        a.[0,1] <- 'a'
+        a.[0,2] <- 'a'
+        a.[0,3] <- 'a'
+        a.[1,0] <- 'a'
+        a.[1,1] <- 'b'
+        a.[1,2] <- 'a'
+        a.[1,3] <- 'b'
+        a.[2,0] <- 'a'
+        a.[2,1] <- 'b'
+        a.[2,2] <- 'a'
+        a.[2,3] <- 'a'
+        a.[3,0] <- 'a'
+        a.[3,1] <- 'b'
+        a.[3,2] <- 'a'
+        a.[3,3] <- 'b'
+        a
+ 
+ //   test <@ permuteArray [|'i';'c';'e';'i';'c'|] [| [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|] |] 0 = [|[|'i';'i';'i';'i';'i'|];[|'i';'c';'i';'c';'i'|];[|'i';'c';'e';'i';'c'|];[|'i';'c';'e';'i';'i'|];[|'i';'c';'e';'i';'c'|]|] @>
 
+        
 //    // verify encoding
     test <@ encode "vigilance" "meetmeontuesdayeveningatseven" = "hmkbxebpxpmyllyrxiiqtoltfgzzv" @>
     test <@ encode "scones" "meetmebythetree" = "egsgqwtahuiljgs" @>
@@ -155,10 +186,9 @@ let tests () =
     test <@ charArrayAsString (padSeed (Array.create 20 'c') [|'v';'i';'g';'i';'l';'a';'n';'c';'e'|] 0 20) = "vigilancevigilancevi" @>
 //    test <@ permuteArray [|'a';'b';'a';'b'|] [| [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]|] 0 = [|[|'a';'a';'a';'a'|];[|'a';'b';'a';'b'|];[|'a';'b';'a';'a'|];[|'a';'b';'a';'b'|]|] @>
 //    test <@ permuteArray [|'i';'c';'e';'i';'c'|] [| [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|] |] 0 = [|[|'i';'i';'i';'i';'i'|];[|'i';'c';'i';'c';'i'|];[|'i';'c';'e';'i';'c'|];[|'i';'c';'e';'i';'i'|];[|'i';'c';'e';'i';'c'|]|] @>
-    test <@ permuteArray [|'a';'b';'a';'b'|] (Array2D.create 4 4 'x') 0 = [|[|'a';'a';'a';'a'|],[|'a';'b';'a';'b'|],[|'a';'b';'a';'a'|],[|'a';'b';'a';'b'|]|] @>
-    test <@ permuteArray [|'i';'c';'e';'i';'c'|] [| [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|] |] 0 = [|[|'i';'i';'i';'i';'i'|];[|'i';'c';'i';'c';'i'|];[|'i';'c';'e';'i';'c'|];[|'i';'c';'e';'i';'i'|];[|'i';'c';'e';'i';'c'|]|] @>
+    test <@ permuteArray [|'a';'b';'a';'b'|] (Array2D.create 4 4 'x') 0 = perTestArr @>
+    //test <@ permuteArray [|'i';'c';'e';'i';'c'|] [| [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|] |] 0 = [|[|'i';'i';'i';'i';'i'|];[|'i';'c';'i';'c';'i'|];[|'i';'c';'e';'i';'c'|];[|'i';'c';'e';'i';'i'|];[|'i';'c';'e';'i';'c'|]|] @>
 
-    let arr = [|[1;2;4];[2;3;4]|]
 // run the tests
 tests ()
 
