@@ -57,6 +57,26 @@ let findMeBack (substitutionSquare:char[][]) (x:char) (y:char) =
     let iY = alphabetIndex y substitutionSquare.[iX]
     substitutionSquare.[0].[iY]
 
+// gets all the permutations of the keyword array, taking each
+// number of characters in turn and copying that through the rest 
+// of the array such that if the keyword was: 'redre' then the permutations
+// would be rrrrr, rerer, redre, redrr, redre
+// The order is important because the index of the matching keyword, in this case
+// can be either 2 or 4 but the lowest is chosen meaning the secret key is the first
+// 'index' + 1 characters out of the keyword array.  In this example the keyword is
+// 'red' not 'redre'.  Although both are theoretically valid.
+let rec permuteArray(seedArray:char[]) (permutations:char[,]) (current:int) = 
+    let iNext = current + 1
+    let max = seedArray.Length
+    let target = Array.create iNext 'x'
+    match current < max with
+    | false -> permutations
+    | true -> 
+        Array.blit seedArray 0 target 0 iNext 
+        let padded = padSeed (Array.create max 'x') target 0 max
+        padded |> Array.iteri(fun i c -> permutations.[current,i] <- c)
+        permuteArray seedArray permutations iNext
+
 // encodes
 let encode (key:Keyword) (message:Message) : Message =
     let lenMsg = message.Length
@@ -81,33 +101,22 @@ let decode (key:Keyword) (message:Message) : Message =
 //// take the plain text letter and find it in the first column
 //// go along that column until you find the cipher text letter
 //// the letter in the first row of those co-ordinates is the letter in the keyword
-//let decipher (cipher:Message) (message:Message) : Keyword =
-//    let cipherSquare = substitutionChart cAlphabet
-//    let cMsg = message.ToCharArray()
-//    let cCpr = cipher.ToCharArray() 
-//    let bigKey = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg cCpr
-//    // how do I find a repeating sequence ie scones in the sconessconessc
-//    // it's the longest repeat
+let decipher (cipher:Message) (message:Message) : Keyword =
+    let cipherSquare = substitutionChart cAlphabet
+    let cMsg = message.ToCharArray()
+    let cCpr = cipher.ToCharArray() 
+    let bigKey = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg cCpr
+    let permutations = Array2D.create bigKey.Length bigKey.Length 'x'
+    permuteArray bigKey permutations 0
 
-let rec permuteArray(seedArray:char[]) (permutations:char[][]) (current:int) = 
-    let iNext = current + 1
-    let max = seedArray.Length
-    let target = Array.create current 'x'
-    match current < max with
-    | false -> permutations
-    | true -> 
-        Array.blit seedArray 0 target 0 current 
-        let padded = padSeed (Array.create max 'x') target 0 max
-        padded |> Array.iteri(fun i c -> permutations.[current].[i] <- c)
-        permuteArray seedArray permutations iNext
+    // how do I find a repeating sequence ie scones in the sconessconessc
+    // it's the longest repeat
+
 
 #r @"../packages/Unquote/lib/net45/Unquote.dll"
 open Swensen.Unquote
 
 let tests () =
-
-// verify permutations
-    test <@ permuteArray [|'a';'b';'a';'b'|] [| [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]|] 0 = [|[|'a';'a';'a';'a'|];[|'a';'b';'a';'b'|];[|'a';'b';'c';'a'|];[|'a';'b';'c';'d'|]|] @>
 
 //    // verify encoding
     test <@ encode "vigilance" "meetmeontuesdayeveningatseven" = "hmkbxebpxpmyllyrxiiqtoltfgzzv" @>
@@ -122,7 +131,6 @@ let tests () =
 //    test <@ decipher "hcqxqqtqljmlzhwiivgbsapaiwcenmyu" "packmyboxwithfivedozenliquorjugs" = "scones" @>
 
     // verify utilities
-    //test <@ permuteArray [|'a';'b';'c';'d';'e'|] = [|'a';'b';'a';'b';'a'|]@>
     test <@ charArrayAsString [|'a';'b';'c'|] = "abc" @>
     test <@ rotatedLine [|'a';'b';'c'|] 1 = [|'b';'c';'a'|]@>
     test <@ charArrayAsString (rotatedLine [|'a';'b';'c'|] 1) = "bca" @>
@@ -145,7 +153,12 @@ let tests () =
     test <@ (substitutionChart cAlphabet).[(alphabetIndex 'v' cAlphabet)].[(alphabetIndex 'm' cAlphabet)] = 'h'@>
     test <@ (substitutionChart cAlphabet).[(alphabetIndex 'm' cAlphabet)].[(alphabetIndex 'v' cAlphabet)] = 'h'@>
     test <@ charArrayAsString (padSeed (Array.create 20 'c') [|'v';'i';'g';'i';'l';'a';'n';'c';'e'|] 0 20) = "vigilancevigilancevi" @>
+//    test <@ permuteArray [|'a';'b';'a';'b'|] [| [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]|] 0 = [|[|'a';'a';'a';'a'|];[|'a';'b';'a';'b'|];[|'a';'b';'a';'a'|];[|'a';'b';'a';'b'|]|] @>
+//    test <@ permuteArray [|'i';'c';'e';'i';'c'|] [| [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|] |] 0 = [|[|'i';'i';'i';'i';'i'|];[|'i';'c';'i';'c';'i'|];[|'i';'c';'e';'i';'c'|];[|'i';'c';'e';'i';'i'|];[|'i';'c';'e';'i';'c'|]|] @>
+    test <@ permuteArray [|'a';'b';'a';'b'|] (Array2D.create 4 4 'x') 0 = [|[|'a';'a';'a';'a'|],[|'a';'b';'a';'b'|],[|'a';'b';'a';'a'|],[|'a';'b';'a';'b'|]|] @>
+    test <@ permuteArray [|'i';'c';'e';'i';'c'|] [| [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|]; [|'x';'x';'x';'x';'x'|] |] 0 = [|[|'i';'i';'i';'i';'i'|];[|'i';'c';'i';'c';'i'|];[|'i';'c';'e';'i';'c'|];[|'i';'c';'e';'i';'i'|];[|'i';'c';'e';'i';'c'|]|] @>
 
+    let arr = [|[1;2;4];[2;3;4]|]
 // run the tests
 tests ()
 
