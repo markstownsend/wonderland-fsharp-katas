@@ -75,28 +75,39 @@ let decode (key:Keyword) (message:Message) : Message =
     let decoded = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) filledKey cMsg
     charArrayAsString decoded
 
+//// decipher gets the keyword out of the message and the cipher
+//// arrive back at the keyword and find the repeating sequence, the first repeat is the keyword
+//// presuming the message is longer than the keyword
+//// take the plain text letter and find it in the first column
+//// go along that column until you find the cipher text letter
+//// the letter in the first row of those co-ordinates is the letter in the keyword
+//let decipher (cipher:Message) (message:Message) : Keyword =
+//    let cipherSquare = substitutionChart cAlphabet
+//    let cMsg = message.ToCharArray()
+//    let cCpr = cipher.ToCharArray() 
+//    let bigKey = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg cCpr
+//    // how do I find a repeating sequence ie scones in the sconessconessc
+//    // it's the longest repeat
 
-// what is difference between decipher gets the keyword out of the message and the cipher
-// arrive back at the keyword and find the repeating sequence, the first repeat is the keyword
-// presuming the message is longer than the keyword
-// take the plain text letter and find it in the first column
-// go along that column until you find the cipher text letter
-// the letter in the first row of those co-ordinates is the letter in the keyword
-let decipher (cipher:Message) (message:Message) : Keyword =
-    let cipherSquare = substitutionChart cAlphabet
-    let cMsg = message.ToCharArray()
-    let cCpr = cipher.ToCharArray()
-    let bigKey = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg cCpr
-    // how do I find a repeating sequence ie scones in the sconessconessc
-    // it's the longest repeat
-
-let repeated (containsRepeats:char[]) = 
-    
+let rec permuteArray(seedArray:char[]) (permutations:char[][]) (current:int) = 
+    let iNext = current + 1
+    let max = seedArray.Length
+    let target = Array.create current 'x'
+    match current < max with
+    | false -> permutations
+    | true -> 
+        Array.blit seedArray 0 target 0 current 
+        let padded = padSeed (Array.create max 'x') target 0 max
+        padded |> Array.iteri(fun i c -> permutations.[current].[i] <- c)
+        permuteArray seedArray permutations iNext
 
 #r @"../packages/Unquote/lib/net45/Unquote.dll"
 open Swensen.Unquote
 
 let tests () =
+
+// verify permutations
+    test <@ permuteArray [|'a';'b';'a';'b'|] [| [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]; [|'x';'x';'x';'x'|]|] 0 = [|[|'a';'a';'a';'a'|];[|'a';'b';'a';'b'|];[|'a';'b';'c';'a'|];[|'a';'b';'c';'d'|]|] @>
 
 //    // verify encoding
     test <@ encode "vigilance" "meetmeontuesdayeveningatseven" = "hmkbxebpxpmyllyrxiiqtoltfgzzv" @>
@@ -111,6 +122,7 @@ let tests () =
 //    test <@ decipher "hcqxqqtqljmlzhwiivgbsapaiwcenmyu" "packmyboxwithfivedozenliquorjugs" = "scones" @>
 
     // verify utilities
+    //test <@ permuteArray [|'a';'b';'c';'d';'e'|] = [|'a';'b';'a';'b';'a'|]@>
     test <@ charArrayAsString [|'a';'b';'c'|] = "abc" @>
     test <@ rotatedLine [|'a';'b';'c'|] 1 = [|'b';'c';'a'|]@>
     test <@ charArrayAsString (rotatedLine [|'a';'b';'c'|] 1) = "bca" @>
@@ -136,3 +148,4 @@ let tests () =
 
 // run the tests
 tests ()
+
