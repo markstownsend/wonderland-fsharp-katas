@@ -65,7 +65,7 @@ let findMeBack (substitutionSquare:char[][]) (x:char) (y:char) =
 // can be either 2 or 4 but the lowest is chosen meaning the secret key is the first
 // 'index' + 1 characters out of the keyword array.  In this example the keyword is
 // 'red' not 'redre'.  Although both are theoretically valid.
-let rec permuteArray(seedArray:char[]) (permutations:char[,]) (current:int) = 
+let rec permuteArray(seedArray:char[]) (permutations:char[][]) (current:int) = 
     let iNext = current + 1
     let max = seedArray.Length
     let target = Array.create iNext 'x'
@@ -74,7 +74,8 @@ let rec permuteArray(seedArray:char[]) (permutations:char[,]) (current:int) =
     | true -> 
         Array.blit seedArray 0 target 0 iNext 
         let padded = padSeed (Array.create max 'x') target 0 max
-        padded |> Array.iteri(fun i c -> permutations.[current,i] <- c)
+        //padded |> Array.iteri(fun i c -> permutations.[current] <- c)
+        permutations.[current] <- padded
         permuteArray seedArray permutations iNext
 
 // encodes
@@ -95,8 +96,8 @@ let decode (key:Keyword) (message:Message) : Message =
     let decoded = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) filledKey cMsg
     charArrayAsString decoded
 
-//// decipher gets the keyword out of the message and the cipher
-//// arrive back at the keyword and find the repeating sequence, the first repeat is the keyword
+//// decipher gets the keyword out of the message and the cipher once it
+//// arrives back at the padded keyword, has to find the repeating sequence, the first repeat is the keyword
 //// presuming the message is longer than the keyword
 //// take the plain text letter and find it in the first column
 //// go along that column until you find the cipher text letter
@@ -112,13 +113,15 @@ let decipher (cipher:Message) (message:Message) : Keyword =
     let cMsg = message.ToCharArray()
     let cCpr = cipher.ToCharArray() 
     let bigKey = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg cCpr
-    let permutations = permuteArray bigKey (Array2D.create bigKey.Length bigKey.Length 'x') 0
-    let matching = [| for a in 0 .. permutations.Length - 1 do yield (Array.compareWith comparer bigKey permutations.[a, *]), permutations.[a, *] |]
-    let matched = matching |> Array.where(fun x -> fst x = 0) |> Array.toList
-    charArrayAsString (snd matched.Head)
-
-    // how do I find a repeating sequence ie scones in the sconessconessc
-    // it's the longest repeat
+    //let permutations = permuteArray bigKey (Array2D.create bigKey.Length bigKey.Length 'x') 0
+    let permutations = permuteArray bigKey (Array.create bigKey.Length (Array.create bigKey.Length 'x'))
+    
+    let matching = permutations |> Array.mapi(fun i c -> (Array.compareWith comparer c bigKey), i)
+    //let matching = [| for a in 0 .. bigKey.Length - 1 do yield (Array.compareWith comparer bigKey permutations.[a]), permutations.[a].[*] |]
+    // how does this iteration work, is it along the first row, then the second row, etc. etc.
+    "hello"
+    //let matched = matching |> Array.where(fun x -> fst x = 0) |> Array.toList
+    //charArrayAsString (snd matched.Head)
 
 
 #r @"../packages/Unquote/lib/net45/Unquote.dll"
@@ -158,7 +161,7 @@ let tests () =
     test <@ decode "scones" "egsgqwtahuiljgs" = "meetmebythetree" @>
 //
 //    // verify decyphering
-//    test <@ decipher "opkyfipmfmwcvqoklyhxywgeecpvhelzg" "thequickbrownfoxjumpsoveralazydog" = "vigilance" @>
+    test <@ decipher "opkyfipmfmwcvqoklyhxywgeecpvhelzg" "thequickbrownfoxjumpsoveralazydog" = "vigilance" @>
 //    test <@ decipher "hcqxqqtqljmlzhwiivgbsapaiwcenmyu" "packmyboxwithfivedozenliquorjugs" = "scones" @>
 
     // verify utilities
