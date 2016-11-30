@@ -73,9 +73,7 @@ let rec permuteArray(seedArray:char[]) (permutations:char[][]) (current:int) =
     | false -> permutations 
     | true -> 
         Array.blit seedArray 0 target 0 iNext 
-        printf "%s" (charArrayAsString target)
         let padded = padSeed (Array.create max 'x') target 0 max
-        //padded |> Array.iteri(fun i c -> permutations.[current] <- c)
         permutations.[current] <- padded
         permuteArray seedArray permutations iNext
 
@@ -104,24 +102,15 @@ let decode (key:Keyword) (message:Message) : Message =
 //// go along that column until you find the cipher text letter
 //// the letter in the first row of those co-ordinates is the letter in the keyword
 let decipher (cipher:Message) (message:Message) : Keyword =
-    
-    let comparer (elem1:char) (elem2:char) = 
-        if elem1 > elem2 then 1
-        elif elem1 < elem2 then -1
-        else 0
-
     let cipherSquare = substitutionChart cAlphabet
     let cMsg = message.ToCharArray()
     let cCpr = cipher.ToCharArray() 
     let bigKey = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg cCpr
-    printf "%A" bigKey.Length
     let permutations = permuteArray bigKey (Array.create bigKey.Length (Array.create bigKey.Length 'x'))
-    let p = permutations 10  //why do I have to invoke this in this step, I thought I had already done that in the line above
-    p |> Array.iter(fun a -> printf "%s" (charArrayAsString a))
-    let matching = p |> Array.where(fun c -> c = bigKey) |> Array.mapi(fun i c -> i, c)
-    printf "%A" matching.Length
-    let matched = matching |> Array.where(fun x -> fst x = 0) |> Array.toList
-    charArrayAsString (snd matched.Head)
+    let p = permutations 0  //why do I have to invoke this in this step, I thought I had already done that in the line above
+    let matching = p |> Array.mapi(fun i c -> i, c) |> Array.where(fun c -> (snd c) = bigKey)
+    let key = (snd matching.[0]) |> Array.take ((fst matching.[0]) + 1)
+    charArrayAsString key 
 
 
 #r @"../packages/Unquote/lib/net45/Unquote.dll"
@@ -162,7 +151,7 @@ let tests () =
 //
 //    // verify decyphering
     test <@ decipher "opkyfipmfmwcvqoklyhxywgeecpvhelzg" "thequickbrownfoxjumpsoveralazydog" = "vigilance" @>
-//    test <@ decipher "hcqxqqtqljmlzhwiivgbsapaiwcenmyu" "packmyboxwithfivedozenliquorjugs" = "scones" @>
+    test <@ decipher "hcqxqqtqljmlzhwiivgbsapaiwcenmyu" "packmyboxwithfivedozenliquorjugs" = "scones" @>
 
     // verify utilities
     test <@ charArrayAsString [|'a';'b';'c'|] = "abc" @>
