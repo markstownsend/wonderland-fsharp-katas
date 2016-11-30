@@ -70,9 +70,10 @@ let rec permuteArray(seedArray:char[]) (permutations:char[][]) (current:int) =
     let max = seedArray.Length
     let target = Array.create iNext 'x'
     match current < max with
-    | false -> permutations
+    | false -> permutations 
     | true -> 
         Array.blit seedArray 0 target 0 iNext 
+        printf "%s" (charArrayAsString target)
         let padded = padSeed (Array.create max 'x') target 0 max
         //padded |> Array.iteri(fun i c -> permutations.[current] <- c)
         permutations.[current] <- padded
@@ -96,7 +97,7 @@ let decode (key:Keyword) (message:Message) : Message =
     let decoded = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) filledKey cMsg
     charArrayAsString decoded
 
-//// decipher gets the keyword out of the message and the cipher once it
+//// decipher gets the keyword out of the message and the cipher, once it
 //// arrives back at the padded keyword, has to find the repeating sequence, the first repeat is the keyword
 //// presuming the message is longer than the keyword
 //// take the plain text letter and find it in the first column
@@ -113,17 +114,14 @@ let decipher (cipher:Message) (message:Message) : Keyword =
     let cMsg = message.ToCharArray()
     let cCpr = cipher.ToCharArray() 
     let bigKey = Array.map2 (fun x y -> (findMeBack cipherSquare x y)) cMsg cCpr
-    //let permutations = permuteArray bigKey (Array2D.create bigKey.Length bigKey.Length 'x') 0
+    printf "%A" bigKey.Length
     let permutations = permuteArray bigKey (Array.create bigKey.Length (Array.create bigKey.Length 'x'))
-    
-    //let matching = permutations |> Array.mapi(fun i c -> (Array.compareWith comparer c bigKey), i)
-    printfn "%s" "hello"
-    printfn "%s" "hello world"
-    //let matching = [| for a in 0 .. bigKey.Length - 1 do yield (Array.compareWith comparer bigKey permutations.[a]), permutations.[a].[*] |]
-    // how does this iteration work, is it along the first row, then the second row, etc. etc.
-    "vigilance"
-    //let matched = matching |> Array.where(fun x -> fst x = 0) |> Array.toList
-    //charArrayAsString (snd matched.Head)
+    let p = permutations 10  //why do I have to invoke this in this step, I thought I had already done that in the line above
+    p |> Array.iter(fun a -> printf "%s" (charArrayAsString a))
+    let matching = p |> Array.where(fun c -> c = bigKey) |> Array.mapi(fun i c -> i, c)
+    printf "%A" matching.Length
+    let matched = matching |> Array.where(fun x -> fst x = 0) |> Array.toList
+    charArrayAsString (snd matched.Head)
 
 
 #r @"../packages/Unquote/lib/net45/Unquote.dll"
